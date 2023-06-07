@@ -19,7 +19,6 @@ const seatsSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-
     user: {}
 });
 

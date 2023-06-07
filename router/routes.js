@@ -5,9 +5,6 @@ const bodyParser = require("body-parser");
 router.use(bodyParser.json());
 
 const { userModel, seatsModel } = require("../model/schema");
-const { Console } = require("console");
-
-const secretKey = process.env.KEY;
 
 
 //seats get path
@@ -28,8 +25,29 @@ router.get("/get-seats", async (req, res) => {
 router.put("/seats-reserved", async (req, res) => {
     try {
         const { userName, seatCount } = req.body;
-        //console.log({ userName, seatCount })
-        let seatsData = await findSeatData(seatCount, userName);
+        //if userName is not present or seatCount is less than 1 or getarthan 7 returns
+        if (!userName) {
+            res.status(400).send("Please enter UserName");
+            return;
+        }
+        if (seatCount <= 0 || seatCount > 7) {
+            res.status(400).send("Please enter Number of seat between 1 to 7 range");
+            return;
+        }
+
+        //find the empty seats
+        let seatsDatas = await findSeatData(seatCount, userName);
+        let seatsData = [];
+
+        //if all seats are booked return a messge
+        if (seatsDatas.message !== "") {
+            res.status(200).json({ message: seatsDatas.message });
+            return;
+        }else{
+            seatsData = seatsDatas.data;
+        }
+
+        //set user reserve seat and update status status reserve
         const userData = await userModel.findOne({ userName: userName });
         if (userData) {
             seatsData = [...userData.seatsData, ...seatsData]
@@ -45,11 +63,8 @@ router.put("/seats-reserved", async (req, res) => {
                 seatsData: seatsData,
             });
             const response = await user.save();
-            res.status(200).send(response);
+            res.status(200).json({ seatData: response });
         }
-
-
-
     } catch (err) {
         console.log(err);
         res.status(404).send(err);
@@ -86,7 +101,6 @@ const changeSeatStatus = async (seatsData, userName) => {
 //------------------------------------------------------------------------
 async function findSeatData(seatCount, userName) {
     let seats = await seatsModel.find();
-    //console.log(seats[1].seatNumber);
     let seatsData = [];
 
     //if empty row find where the seatCount equal number of seat empty
@@ -98,7 +112,7 @@ async function findSeatData(seatCount, userName) {
                 seatsData.push(j + 1);
                 if (seatsData.length === parseInt(seatCount)) {
                     await changeSeatStatus(seatsData, userName);
-                    return seatsData; 
+                    return { message: "", data: seatsData };
                 }
             }
         }
@@ -113,6 +127,13 @@ async function findSeatData(seatCount, userName) {
         if (!seats[i].user) {
             arr.push(i + 1);
         }
+    }
+
+    //if the arr.length <seatCount it means there has seatCount equal number of
+    //empty seat not present
+    //------------------------------------------------------------------------
+    if (arr.length < seatCount) {
+        return { message: "seats are not available", data: [] };
     }
 
     let ans = [arr[0]], q = [];
@@ -165,7 +186,7 @@ async function findSeatData(seatCount, userName) {
     }
 
     await changeSeatStatus(ans, userName);
-    return ans;
+    return { message: "", data: ans };
 }
 
 

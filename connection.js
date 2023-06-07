@@ -5,6 +5,7 @@ dotenv.config({ path: "./config.env" });
 
 const db = process.env.DATABASE;
 
+//connect to mongodb data base
 mongoose.connect(db)
     .then(() => {
         console.log("server is connect with mongodb");
