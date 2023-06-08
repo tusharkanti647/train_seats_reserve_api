@@ -56,14 +56,14 @@ router.put("/seats-reserved", async (req, res) => {
             }, {
                 new: true
             });
-            res.status(200).send(response);
+            res.status(200).json({ seatData: response, message:"" });
         } else {
             const user = new userModel({
                 userName: userName,
                 seatsData: seatsData,
             });
             const response = await user.save();
-            res.status(200).json({ seatData: response });
+            res.status(200).json({ seatData: response, message:"" });
         }
     } catch (err) {
         console.log(err);
