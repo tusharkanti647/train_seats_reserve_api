@@ -41,7 +41,7 @@ router.put("/seats-reserved", async (req, res) => {
 
         //if all seats are booked return a messge
         if (seatsDatas.message !== "") {
-            res.status(200).json({ message: seatsDatas.message });
+            res.status(200).json({seatData: {seatsData:[], userName:""}, message: seatsDatas.message });
             return;
         }else{
             seatsData = seatsDatas.data;
